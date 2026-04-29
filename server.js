@@ -100,7 +100,7 @@ app.use(
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
       httpOnly: true, // Prevents JS access, more secure
-      secure: process.env.NODE_ENV === "production", // HTTPS only in production
+      secure: true, // HTTPS only in production
       sameSite: "lax", // Works better with mobile and cookies
       path: "/", // Ensure cookie is sent for all paths
     },
