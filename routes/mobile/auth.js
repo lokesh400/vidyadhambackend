@@ -55,6 +55,44 @@ router.post("/login", (req, res, next) => {
   })(req, res, next);
 });
 
+// router.post("/login", (req, res, next) => {
+//   console.log("BODY:", req.body);
+
+//   passport.authenticate("local", (err, user, info) => {
+//     if (err) {
+//       console.error("ERR:", err);
+//       req.flash("error", "Authentication error");
+//       return next(err);
+//     }
+//     if (!user) {
+//       console.log("LOGIN FAILED:", info);
+//       req.flash("error", info.message);
+//       return res.redirect("/login");
+//     }
+
+//     req.logIn(user, (err) => {
+//       // if (err) return next(err);
+//       // if (user.role === "receptionist") {
+//       //   req.flash("success", "Login successful");
+//       //   return res.redirect("/receptionist");
+//       // }
+//       // if (user.role === "admin") {
+//       //   req.flash("success", "Login successful");
+//       //   return res.redirect("/admin/only");
+//       // }
+//       // if (user.role === "student") {
+//       //   req.flash("success", "Please Login to your student portal");
+//       //   return res.redirect("/login");
+//       // }
+//       // console.log("LOGIN SUCCESS:", user.username);
+//       // req.flash("success", "Login successful");
+//       // return res.redirect("/admin");
+//       if(err) return next(err);
+
+//     });
+//   })(req, res, next);
+// });
+
 router.get("/check", (req, res) => {
   console.log("CHECK SESSION:", req.isAuthenticated());
 

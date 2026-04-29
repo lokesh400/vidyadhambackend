@@ -247,7 +247,7 @@ app.use((err, req, res, next) => {
 
 /* ---------------- SERVER START ---------------- */
 function startKeepAlive() {
-  const url = process.env.RENDER_EXTERNAL_URL;
+  const url = "https://vidyadhambackend.onrender.com";
   if (!url) {
     console.warn("⚠️ RENDER_EXTERNAL_URL not set, keep-alive disabled");
     return;
