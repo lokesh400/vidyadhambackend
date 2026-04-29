@@ -67,7 +67,9 @@ app.use(
       "http://localhost:8081",
       "http://localhost:3000",
       "http://192.168.1.0/24", // Local network for mobile testing
-      process.env.CLIENT_URL || "http://localhost:8081"
+      process.env.CLIENT_URL || "http://localhost:8081",
+      "https://vidyadhambackend.onrender.com",
+      "https://management.vidyadhambook.com",
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -100,7 +102,7 @@ app.use(
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
       httpOnly: true, // Prevents JS access, more secure
-      secure: true, // HTTPS only in production
+      // secure: true, // HTTPS only in production
       sameSite: "lax", // Works better with mobile and cookies
       path: "/", // Ensure cookie is sent for all paths
     },
