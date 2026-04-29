@@ -92,12 +92,13 @@ router.get("/test/:batchId", async (req, res) => {
             testTitle: "$testTitle",
             examType: "$examType",
           },
+          testDate: { $first: "$testDate" }, // Add test date
           uploadedAt: { $first: "$uploadedAt" },
           totalStudents: { $sum: 1 },
         },
       },
       {
-        $sort: { uploadedAt: -1 },
+        $sort: { testDate: -1 }, // Sort by test date
       },
     ]);
 

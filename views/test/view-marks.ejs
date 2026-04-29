@@ -2,9 +2,14 @@
   <div class="max-w-6xl mx-auto bg-white rounded-2xl shadow-xl p-6">
     <!-- Header -->
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-2xl font-bold text-blue-600">
-        🧮 <%= batch.name %> — <%= testTitle %>
-      </h2>
+      <div>
+        <h2 class="text-2xl font-bold text-blue-600">
+          🧮 <%= batch.name %> — <%= testTitle %>
+        </h2>
+        <p class="text-sm text-gray-600 mt-1">
+          📅 Test Date: <strong><%= new Date(testDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' }) %></strong>
+        </p>
+      </div>
 
       <form action="/send/results/<%= batch._id %>/<%= testTitle %>" method="post">
         <button

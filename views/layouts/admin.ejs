@@ -6,6 +6,7 @@
   <title><%= title || "Admin Panel" %></title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="icon" type="image/svg+xml" href="/favicon.png">
 </head>
 
 <body class="bg-gray-100 flex h-screen">
@@ -52,6 +53,12 @@
       <% if(currUser && (currUser.role === 'superadmin' || currUser.role === 'admin')) { %> 
         <a href="/forms/create" class="flex items-center gap-3 p-2 rounded-md hover:bg-gray-800">
           <i class="fas fa-plus"></i> New Form
+        </a>
+      <% } %>
+
+      <% if(currUser && (currUser.role === 'superadmin' || currUser.role === 'admin')) { %>
+        <a href="/noticeboard" class="flex items-center gap-3 p-2 rounded-md hover:bg-gray-800">
+          <i class="fas fa-bullhorn"></i> NoticeBoard
         </a>
       <% } %>
 

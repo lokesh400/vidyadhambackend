@@ -8,7 +8,7 @@ const router = express.Router();
  * BODY: { studentId }
  * Returns ALL tests of this student
  */
-router.post("/all", async (req, res) => {
+router.get("/all", async (req, res) => {
   try {
     const studentId = req.user.id;;
     console.log("Fetching marks for studentId:", studentId);
@@ -25,9 +25,32 @@ router.post("/all", async (req, res) => {
     const marks = await Marks.find({
       student: student.name, // or student.username
       batch: student.batch,
-    }).sort({ uploadedAt: -1 });
+    }).sort({ testDate: -1 }); // Sort by test date (newest first)
 
-    res.json({ marks });
+    // Format response with all relevant data
+    const formattedMarks = marks.map(mark => ({
+      _id: mark._id,
+      testTitle: mark.testTitle,
+      testDate: mark.testDate, // Test conduct date
+      uploadedAt: mark.uploadedAt, // When marks were uploaded
+      examType: mark.examType,
+      rollNo: mark.rollNo,
+      physics: mark.physics,
+      physicsTotal: mark.physicsTotal,
+      chemistry: mark.chemistry,
+      chemistryTotal: mark.chemistryTotal,
+      math: mark.math,
+      mathTotal: mark.mathTotal,
+      botany: mark.botany,
+      botanyTotal: mark.botanyTotal,
+      zoology: mark.zoology,
+      zoologyTotal: mark.zoologyTotal,
+    }));
+
+    res.json({ 
+      success: true,
+      marks: formattedMarks 
+    });
 
   } catch (err) {
     console.log(err);

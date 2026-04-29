@@ -17,6 +17,7 @@ const QRCode = require("qrcode");
 const connectDB = require("./config/db");
 const User = require("./models/User");
 const Batch = require("./models/Batch");
+const NoticeBoard = require("./models/NoticeBoard");
 const { isLoggedIn, requireRole } = require("./middleware/auth");
 
 /* ---------------- ROUTES ---------------- */
@@ -28,6 +29,7 @@ const formRouter = require("./routes/form");
 const admitcardRouter = require("./routes/admitCard");
 const marksRouter = require("./routes/testmarks");
 const batchRoutes = require("./routes/batch");
+const noticeboardRoutes = require("./routes/noticeboard");
 const feeRouter = require("./routes/fee");
 const webAuthRoutes = require("./routes/webauthroutes");
 const queryRoutes = require("./routes/query");
@@ -145,6 +147,7 @@ app.use("/api/m/auth", mobileAuthRoutes);
 app.use("/api/fees", mobileFeeRoutes);
 app.use("/api/timetable", mobileTimetableRoutes);
 app.use("/api/marks", mobileMarksRoutes);
+app.use("/api/noticeboard", noticeboardRoutes);
 
 app.use("/api/batch/admin", mobileAdminBatchRoutes);
 app.use("/api/query/admin", mobileAdminQueryRoutes);
@@ -181,6 +184,30 @@ app.get("/admin/staff-management", isLoggedIn, requireRole("superadmin"), async 
   });
 });
 
+app.get("/noticeboard", isLoggedIn, requireRole("admin"), async (req, res) => {
+  try {
+    const [batches, notices] = await Promise.all([
+      Batch.find().sort({ name: 1, year: 1 }),
+      NoticeBoard.find()
+        .populate("batch", "name courseType year")
+        .populate("createdBy", "name username role")
+        .sort({ createdAt: -1 }),
+    ]);
+
+    res.render("noticeboard/index", {
+      batches,
+      notices,
+      title: "NoticeBoard",
+      pageTitle: "NoticeBoard",
+      activePage: "noticeboard",
+      messages: req.flash(),
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error loading noticeboard");
+  }
+});
+
 app.use("/admin/recruitments", recruitmentsRoutes);
 app.use("/recruitments", recruitmentPublicRoutes);
 app.use("/admin/staff", staffRoutes);
@@ -191,7 +218,6 @@ app.get("/api/me", async (req, res) => {
     const userId = req.user.id;
     const user = await User.findById(userId).populate("batch");
     if (!user) return res.status(404).json({ message: "User not found" });
-    console.log(req.user);
     res.json(user);
   } catch (err) {
     res.status(500).json({ message: "Server error", err });
@@ -223,10 +249,93 @@ app.get("/api/attendance", async (req, res) => {
     }
 
     const userid = req.user.id;
-    const response = await axios.get(
-      `https://vidyadhammandirattendance.onrender.com/attendance/student/${userid}/${month}/${year}`
-    );
-    res.json(response.data);
+
+    // 📌 STATIC SAMPLE DATA FOR APRIL 2026
+    if (parseInt(month) === 4 && parseInt(year) === 2026) {
+      const attendance = {
+        month: 4,
+        year: 2026,
+        monthName: "April",
+        totalDays: 30,
+        summary: {
+          presentDays: 28,
+          absentDays: 2,
+          attendancePercentage: 93.33
+        },
+        dailyData: [
+          // Sample data for all days of April
+          { date: "2026-04-01", day: "Wednesday", present: true, punchIn: "09:00", punchOut: "17:30" },
+          { date: "2026-04-02", day: "Thursday", present: true, punchIn: "09:05", punchOut: "17:25" },
+          { date: "2026-04-03", day: "Friday", present: false, punchIn: null, punchOut: null },
+          { date: "2026-04-04", day: "Saturday", present: true, punchIn: "09:15", punchOut: "17:45" },
+          { date: "2026-04-05", day: "Sunday", present: false, punchIn: null, punchOut: null },
+          { date: "2026-04-06", day: "Monday", present: true, punchIn: "09:00", punchOut: "17:30" },
+          { date: "2026-04-07", day: "Tuesday", present: true, punchIn: "09:10", punchOut: "17:35" },
+          { date: "2026-04-08", day: "Wednesday", present: true, punchIn: "08:55", punchOut: "17:28" },
+          { date: "2026-04-09", day: "Thursday", present: true, punchIn: "09:05", punchOut: "17:32" },
+          { date: "2026-04-10", day: "Friday", present: false, punchIn: null, punchOut: null },
+          { date: "2026-04-11", day: "Saturday", present: true, punchIn: "09:00", punchOut: "17:30" },
+          { date: "2026-04-12", day: "Sunday", present: false, punchIn: null, punchOut: null },
+          { date: "2026-04-13", day: "Monday", present: true, punchIn: "09:02", punchOut: "17:31" },
+          { date: "2026-04-14", day: "Tuesday", present: true, punchIn: "09:00", punchOut: "17:30" },
+          { date: "2026-04-15", day: "Wednesday", present: true, punchIn: "09:08", punchOut: "17:29" },
+          { date: "2026-04-16", day: "Thursday", present: true, punchIn: "09:03", punchOut: "17:33" },
+          { date: "2026-04-17", day: "Friday", present: true, punchIn: "09:01", punchOut: "17:30" },
+          { date: "2026-04-18", day: "Saturday", present: true, punchIn: "09:00", punchOut: "17:30" },
+          { date: "2026-04-19", day: "Sunday", present: false, punchIn: null, punchOut: null },
+          { date: "2026-04-20", day: "Monday", present: true, punchIn: "09:04", punchOut: "17:32" },
+          { date: "2026-04-21", day: "Tuesday", present: true, punchIn: "09:00", punchOut: "17:30" },
+          { date: "2026-04-22", day: "Wednesday", present: true, punchIn: "09:06", punchOut: "17:28" },
+          { date: "2026-04-23", day: "Thursday", present: true, punchIn: "09:02", punchOut: "17:31" },
+          { date: "2026-04-24", day: "Friday", present: true, punchIn: "09:00", punchOut: "17:30" },
+          { date: "2026-04-25", day: "Saturday", present: true, punchIn: "09:05", punchOut: "17:29" },
+          { date: "2026-04-26", day: "Sunday", present: false, punchIn: null, punchOut: null },
+          { date: "2026-04-27", day: "Monday", present: true, punchIn: "09:00", punchOut: "17:30" },
+          { date: "2026-04-28", day: "Tuesday", present: true, punchIn: "09:03", punchOut: "17:32" },
+          { date: "2026-04-29", day: "Wednesday", present: true, punchIn: "09:00", punchOut: "17:30" },
+          { date: "2026-04-30", day: "Thursday", present: true, punchIn: "09:07", punchOut: "17:27" }
+        ],
+        note: "📌 This is sample/hardcoded data for April 2026. Shows date, present status, punch-in and punch-out times."
+      };
+
+      return res.json(attendance);
+    }
+
+    // For other months, query from database
+    try {
+      const Attendance = require('./models/Attendance.js');
+      const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+      const endDate = new Date(year, month, 0).toISOString().split('T')[0];
+
+      const attendanceRecords = await Attendance.find({
+        date: { $gte: startDate, $lte: endDate }
+      }).sort({ date: 1 });
+
+      if (attendanceRecords.length === 0) {
+        return res.json({
+          month: parseInt(month),
+          year: parseInt(year),
+          message: "No attendance records found for this month",
+          records: []
+        });
+      }
+
+      res.json({
+        month: parseInt(month),
+        year: parseInt(year),
+        totalRecords: attendanceRecords.length,
+        records: attendanceRecords
+      });
+    } catch (dbErr) {
+      console.error("Database error:", dbErr);
+      res.json({
+        month: parseInt(month),
+        year: parseInt(year),
+        error: "Database error",
+        message: "Could not fetch attendance records"
+      });
+    }
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error", err });

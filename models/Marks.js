@@ -6,6 +6,7 @@ const marksSchema = new mongoose.Schema({
   rollNo: String,
   testTitle: { type: String, required: true },
   examType: { type: String, required: true },
+  testDate: { type: Date, required: true }, // When the test was conducted
   physicsTotal: Number,
   physics: Number,
   chemistryTotal: Number,
@@ -14,9 +15,9 @@ const marksSchema = new mongoose.Schema({
   math: Number, 
   botanyTotal: Number,  // for NEET
   botany: Number,  
-  zoologyTotal: Number, // for NEET  // for NEET
+  zoologyTotal: Number, // for NEET
   zoology: Number, // for NEET
-  uploadedAt: { type: Date, default: Date.now },
+  uploadedAt: { type: Date, default: Date.now }, // When marks were uploaded
 });
 
 const Marks = mongoose.model("Marks", marksSchema);

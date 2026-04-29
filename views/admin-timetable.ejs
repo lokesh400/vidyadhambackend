@@ -4,18 +4,52 @@
     <input type="hidden" id="hasTimetable" value="<%= hasTimetable %>" />
     <script>const existingTimetable = <%- timetable || 'null' %>;</script>
 
+    <h2 class="text-2xl font-bold mb-6"><%= batchName %> - Timetable Management</h2>
+
     <div class="flex justify-between items-center mb-4">
       <div class="space-x-2">
         <label class="font-medium">No. of Periods:</label>
         <input type="number" id="periodCount" min="1" max="10" value="6" class="border p-1 rounded w-20">
-        <button type="button" id="generatePeriods" class="bg-blue-600 text-white px-3 py-1 rounded">Generate</button>
+        <button type="button" id="generatePeriods" class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">Generate</button>
       </div>
-      <button type="button" id="copyAllBtn" class="bg-green-600 text-white px-3 py-1 rounded">Copy Monday to All Days</button>
+      <button type="button" id="copyAllBtn" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">Copy Monday to All Days</button>
     </div>
 
     <div id="timetableContainer" class="overflow-x-auto"></div>
 
-    <button type="button" id="submitBtn" class="mt-6 bg-blue-700 text-white px-6 py-2 rounded">
+    <style>
+      .day-off {
+        background-color: #f3f4f6;
+        opacity: 0.6;
+      }
+      .day-off input {
+        background-color: #e5e7eb;
+        cursor: not-allowed;
+      }
+      .day-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .day-toggle input[type="checkbox"] {
+        cursor: pointer;
+        width: 18px;
+        height: 18px;
+      }
+      table {
+        border-collapse: collapse;
+      }
+      th, td {
+        border: 1px solid #d1d5db;
+        padding: 8px;
+      }
+      input {
+        padding: 4px 6px;
+        font-size: 13px;
+      }
+    </style>
+
+    <button type="button" id="submitBtn" class="mt-6 bg-blue-700 text-white px-6 py-2 rounded hover:bg-blue-800">
       <%= hasTimetable ? "Update Timetable" : "Save Timetable" %>
     </button>
   </div>
@@ -27,15 +61,20 @@
       let html = `<table class="w-full border border-gray-300 text-sm">
         <thead class="bg-gray-200">
           <tr>
-            <th class="border p-2 w-24">Day</th>`;
+            <th class="border p-2 w-28">Day</th>`;
       for (let i = 1; i <= periodCount; i++) {
         html += `<th class="border p-2 text-center">Period ${i}</th>`;
       }
       html += `</tr></thead><tbody>`;
 
       days.forEach(day => {
-        html += `<tr>
-          <td class="border font-semibold p-2 text-center">${day}</td>`;
+        html += `<tr class="day-row" data-day="${day}">
+          <td class="border font-semibold p-2">
+            <div class="day-toggle">
+              <input type="checkbox" class="day-off-toggle" data-day="${day}" title="Mark day as off">
+              <span>${day}</span>
+            </div>
+          </td>`;
         for (let i = 1; i <= periodCount; i++) {
           html += `
             <td class="border p-1">
@@ -51,20 +90,50 @@
       html += `</tbody></table>`;
       document.getElementById("timetableContainer").innerHTML = html;
 
-      // 🟢 Prefill existing data
+      // Add event listeners for day toggle
+      document.querySelectorAll(".day-off-toggle").forEach(toggle => {
+        toggle.addEventListener("change", (e) => {
+          const day = e.target.dataset.day;
+          const row = document.querySelector(`tr[data-day="${day}"]`);
+          const inputs = row.querySelectorAll("input:not(.day-off-toggle)");
+          
+          if (e.target.checked) {
+            row.classList.add("day-off");
+            inputs.forEach(input => input.disabled = true);
+          } else {
+            row.classList.remove("day-off");
+            inputs.forEach(input => input.disabled = false);
+          }
+        });
+      });
+
+      // Prefill existing data
       if (existingTimetable) {
         existingTimetable.forEach(dayObj => {
+          const toggle = document.querySelector(`input.day-off-toggle[data-day="${dayObj.day}"]`);
+          
+          if (dayObj.isOff && toggle) {
+            toggle.checked = true;
+            const row = document.querySelector(`tr[data-day="${dayObj.day}"]`);
+            row.classList.add("day-off");
+            row.querySelectorAll("input:not(.day-off-toggle)").forEach(input => input.disabled = true);
+          }
+          
           dayObj.periods.forEach((p, index) => {
-            document.querySelector(`[data-day="${dayObj.day}"][data-period="${index + 1}"].subject`).value = p.subject || "";
-            document.querySelector(`[data-day="${dayObj.day}"][data-period="${index + 1}"].teacher`).value = p.teacher || "";
-            document.querySelector(`[data-day="${dayObj.day}"][data-period="${index + 1}"].startTime`).value = p.startTime || "";
-            document.querySelector(`[data-day="${dayObj.day}"][data-period="${index + 1}"].endTime`).value = p.endTime || "";
+            const subjectInput = document.querySelector(`input.subject[data-day="${dayObj.day}"][data-period="${index + 1}"]`);
+            const teacherInput = document.querySelector(`input.teacher[data-day="${dayObj.day}"][data-period="${index + 1}"]`);
+            const startTimeInput = document.querySelector(`input.startTime[data-day="${dayObj.day}"][data-period="${index + 1}"]`);
+            const endTimeInput = document.querySelector(`input.endTime[data-day="${dayObj.day}"][data-period="${index + 1}"]`);
+            
+            if (subjectInput) subjectInput.value = p.subject || "";
+            if (teacherInput) teacherInput.value = p.teacher || "";
+            if (startTimeInput) startTimeInput.value = p.startTime || "";
+            if (endTimeInput) endTimeInput.value = p.endTime || "";
           });
         });
       }
     }
 
-    // Default load
     generateTable();
 
     document.getElementById("generatePeriods").addEventListener("click", () => {
@@ -72,50 +141,75 @@
       if (count > 0) generateTable(count);
     });
 
-    // Copy Monday → all days
     document.getElementById("copyAllBtn").addEventListener("click", () => {
-      const mondaySubjects = document.querySelectorAll('[data-day="Monday"].subject');
-      const mondayTeachers = document.querySelectorAll('[data-day="Monday"].teacher');
-      const mondayStart = document.querySelectorAll('[data-day="Monday"].startTime');
-      const mondayEnd = document.querySelectorAll('[data-day="Monday"].endTime');
+      const mondaySubjects = document.querySelectorAll('input.subject[data-day="Monday"]');
+      const mondayTeachers = document.querySelectorAll('input.teacher[data-day="Monday"]');
+      const mondayStart = document.querySelectorAll('input.startTime[data-day="Monday"]');
+      const mondayEnd = document.querySelectorAll('input.endTime[data-day="Monday"]');
       const periodCount = mondaySubjects.length;
 
       days.slice(1).forEach(day => {
         for (let i = 0; i < periodCount; i++) {
-          document.querySelector(`[data-day="${day}"][data-period="${i+1}"].subject`).value = mondaySubjects[i].value;
-          document.querySelector(`[data-day="${day}"][data-period="${i+1}"].teacher`).value = mondayTeachers[i].value;
-          document.querySelector(`[data-day="${day}"][data-period="${i+1}"].startTime`).value = mondayStart[i].value;
-          document.querySelector(`[data-day="${day}"][data-period="${i+1}"].endTime`).value = mondayEnd[i].value;
+          const subjectInput = document.querySelector(`input.subject[data-day="${day}"][data-period="${i+1}"]`);
+          const teacherInput = document.querySelector(`input.teacher[data-day="${day}"][data-period="${i+1}"]`);
+          const startInput = document.querySelector(`input.startTime[data-day="${day}"][data-period="${i+1}"]`);
+          const endInput = document.querySelector(`input.endTime[data-day="${day}"][data-period="${i+1}"]`);
+          
+          if (subjectInput) subjectInput.value = mondaySubjects[i].value;
+          if (teacherInput) teacherInput.value = mondayTeachers[i].value;
+          if (startInput) startInput.value = mondayStart[i].value;
+          if (endInput) endInput.value = mondayEnd[i].value;
         }
       });
-      alert("✅ Copied Monday’s timetable to all days!");
+      alert("✅ Copied Monday's timetable to all days!");
     });
 
-    // Save or Update
     document.getElementById("submitBtn").addEventListener("click", async () => {
-      const batchId = document.getElementById("batchId").value;
-      const periodCount = parseInt(document.getElementById("periodCount").value);
-      const timetable = [];
+      try {
+        const batchId = document.getElementById("batchId").value;
+        const periodCount = parseInt(document.getElementById("periodCount").value);
+        const timetable = [];
 
-      days.forEach(day => {
-        const dayPeriods = [];
-        for (let i = 1; i <= periodCount; i++) {
-          const subject = document.querySelector(`[data-day="${day}"][data-period="${i}"].subject`).value.trim();
-          const teacher = document.querySelector(`[data-day="${day}"][data-period="${i}"].teacher`).value.trim();
-          const startTime = document.querySelector(`[data-day="${day}"][data-period="${i}"].startTime`).value;
-          const endTime = document.querySelector(`[data-day="${day}"][data-period="${i}"].endTime`).value;
-          dayPeriods.push({ subject, teacher, startTime, endTime });
+        days.forEach(day => {
+          const dayRow = document.querySelector(`tr[data-day="${day}"]`);
+          if (!dayRow) return;
+          
+          const toggle = dayRow.querySelector("input.day-off-toggle");
+          const isOff = toggle ? toggle.checked : false;
+          
+          const dayPeriods = [];
+          for (let i = 1; i <= periodCount; i++) {
+            const subject = document.querySelector(`input.subject[data-day="${day}"][data-period="${i}"]`);
+            const teacher = document.querySelector(`input.teacher[data-day="${day}"][data-period="${i}"]`);
+            const startTime = document.querySelector(`input.startTime[data-day="${day}"][data-period="${i}"]`);
+            const endTime = document.querySelector(`input.endTime[data-day="${day}"][data-period="${i}"]`);
+            
+            dayPeriods.push({
+              subject: subject ? subject.value.trim() : "",
+              teacher: teacher ? teacher.value.trim() : "",
+              startTime: startTime ? startTime.value : "",
+              endTime: endTime ? endTime.value : ""
+            });
+          }
+          timetable.push({ day, isOff, periods: dayPeriods });
+        });
+
+        const response = await fetch("/api/timetable/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ batchId, timetable }),
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          alert("✅ " + (data.message || "Timetable saved successfully!"));
+          setTimeout(() => location.reload(), 800);
+        } else {
+          alert("❌ " + (data.message || "Error saving timetable"));
         }
-        timetable.push({ day, periods: dayPeriods });
-      });
-
-      const res = await fetch("/api/timetable/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ batchId, timetable }),
-      });
-
-      const data = await res.json();
-      alert(data.message || "Timetable saved!");
+      } catch (error) {
+        console.error("Error:", error);
+        alert("❌ Error: " + error.message);
+      }
     });
   </script>

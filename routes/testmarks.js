@@ -95,6 +95,7 @@ router.post("/upload/:batchId",isLoggedIn,requireRole("admin"), upload.single("e
       marks: marksData,
       total: physics + chemistry + maths,
       testTitle: req.body.testTitle,
+      testDate: new Date(req.body.testDate), // Add test date
       examType: type,
     });
     await newResult.save();
@@ -118,6 +119,7 @@ router.post("/upload/:batchId",isLoggedIn,requireRole("admin"), upload.single("e
       marks: marksData,
       total: physics + chemistry + botany + zoology,
       testTitle: req.body.testTitle,
+      testDate: new Date(req.body.testDate), // Add test date
       examType: type,
     });
     await newResult.save();
@@ -135,8 +137,25 @@ router.post("/upload/:batchId",isLoggedIn,requireRole("admin"), upload.single("e
 // 📄 List all tests for a batch
 router.get("/tests/:batchId",isLoggedIn,requireRole("admin"), async (req, res) => {
   const batch = await Batch.findById(req.params.batchId);
-  const tests = await Marks.find({ batch: batch._id }).distinct("testTitle");
-  res.render("test/test-list", { batch, tests,
+  
+  // Get unique tests with their dates
+  const tests = await Marks.aggregate([
+    { $match: { batch: batch._id } },
+    {
+      $group: {
+        _id: "$testTitle",
+        testTitle: { $first: "$testTitle" },
+        testDate: { $first: "$testDate" },
+        uploadedAt: { $first: "$uploadedAt" },
+        totalStudents: { $sum: 1 },
+      }
+    },
+    { $sort: { testDate: -1 } }
+  ]);
+  
+  res.render("test/test-list", { 
+    batch, 
+    tests,
     title: `Tests for ${batch.name}`,
     pageTitle: `Tests for ${batch.name}`,
     activePage: 'batches',
@@ -147,8 +166,16 @@ router.get("/tests/:batchId",isLoggedIn,requireRole("admin"), async (req, res) =
 // 📊 View result of a particular test
 router.get("/view/:batchId/:testTitle",isLoggedIn,requireRole("admin"), async (req, res) => {
   const batch = await Batch.findById(req.params.batchId);
-  const marks = await Marks.find({ batch: batch._id, testTitle: req.params.testTitle }).populate("student");
-  res.render("test/view-marks", { batch, marks, testTitle: req.params.testTitle,
+  const marksData = await Marks.find({ batch: batch._id, testTitle: req.params.testTitle }).populate("student");
+  
+  // Get testDate from first record (all records for same test have same testDate)
+  const testDate = marksData.length > 0 ? marksData[0].testDate : new Date();
+  
+  res.render("test/view-marks", { 
+    batch, 
+    marks: marksData, 
+    testTitle: req.params.testTitle,
+    testDate: testDate,
     title: `Marks - ${req.params.testTitle} - ${batch.name}`,
     pageTitle: `Marks - ${req.params.testTitle} - ${batch.name}`,
     activePage: 'batches',

@@ -9,6 +9,7 @@ const periodSchema = new mongoose.Schema({
 
 const daySchema = new mongoose.Schema({
   day: { type: String, required: true },
+  isOff: { type: Boolean, default: false }, // Mark day as off (no classes)
   periods: [periodSchema],
 });
 

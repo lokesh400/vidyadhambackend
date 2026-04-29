@@ -118,8 +118,19 @@ router.get("/admin/:batchId", async (req, res) => {
 // Student: Fetch timetable JSON
 router.get("/student/:batchId", async (req, res) => {
   try {
-    const timetable = await Timetable.find({ batch: req.params.batchId });
-    res.json({ success: true, timetable });
+    const timetableDoc = await Timetable.findOne({ batch: req.params.batchId });
+    if (!timetableDoc) {
+      return res.status(404).json({ success: false, message: "Timetable not found" });
+    }
+    
+    // Filter out days marked as "off"
+    const activeDays = timetableDoc.timetable.filter(day => !day.isOff);
+    
+    res.json({ 
+      success: true, 
+      timetable: activeDays,
+      totalDays: activeDays.length 
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: "Error fetching timetable" });
