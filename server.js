@@ -166,6 +166,10 @@ app.get("/data-deletion-policy", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "data-deletion-policy.html"));
 });
 
+app.get("/privacy-policy", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "privacy-policy.html"));
+});
+
 app.get("/admin", isLoggedIn, requireRole("superadmin"), async (req, res) => {
   const users = await User.find({ role: "student" });
   const batch = await Batch.find();
