@@ -38,7 +38,7 @@ router.post("/forget/reset-password", async (req, res) => {
 
     // const resetUrl = `https://m.vidyadhambook.com/password/reset/${resetToken}`;
 
-    const resetUrl = `http://10.25.167.198:4000/password/reset/${resetToken}`;
+    const resetUrl = `http://management.vidyadhambook.com/password/reset/${resetToken}`;
 
     // Send email
     const emailSent = await sendResetPasswordEmail(email, resetUrl);

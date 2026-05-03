@@ -103,7 +103,7 @@ router.post("/reset-password", async (req, res) => {
     await user.save();
 
     // Create reset URL
-    const baseUrl = process.env.RENDER_EXTERNAL_URL || "http://localhost:3000";
+    const baseUrl = "https://management.vidyadhambook.com"
     const resetUrl = `${baseUrl}/password/reset/${resetToken}`;
 
     // Send email
